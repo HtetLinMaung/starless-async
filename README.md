@@ -94,7 +94,7 @@ workerEach(
 To map an array with worker threads
 
 ```js
-const { workerEach } = require("starless-async");
+const { workerEach } = require("starless-async/worker-each");
 
 async function main() {
   const chars = await workerEach(
@@ -108,6 +108,18 @@ async function main() {
     }
   );
   // chars => [{0: a}, {1: b}, {2: c}, {3: d}]
+}
+
+main();
+```
+
+To run heavy computation tasks in parallel
+
+```js
+const { default: runParallel } = require("./run-parallel");
+
+async function main() {
+  await runParallel([100000000, 100000], "./worker.js");
 }
 
 main();
