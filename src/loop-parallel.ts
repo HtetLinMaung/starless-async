@@ -3,7 +3,7 @@ import { setEnvironmentData } from "worker_threads";
 import { DynamicObject } from ".";
 import runWorker from "./utils/run-worker";
 
-export default async function runParallel(
+export default async function loopParallel(
   values: any[] | DynamicObject,
   scriptUrl: string | URL,
   environments: DynamicObject = {},
