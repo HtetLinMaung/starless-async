@@ -16,30 +16,50 @@ exports.asyncEach = exports.timeout = void 0;
 const is_async_function_1 = __importDefault(require("./utils/is-async-function"));
 const timeout = (duration) => __awaiter(void 0, void 0, void 0, function* () { return new Promise((resolve) => setTimeout(resolve, duration * 1000)); });
 exports.timeout = timeout;
-const asyncEach = (values, cb) => __awaiter(void 0, void 0, void 0, function* () {
+const asyncEach = (values, cb, t = 0) => __awaiter(void 0, void 0, void 0, function* () {
     if (Array.isArray(values)) {
-        const promises = [];
+        let results = [];
+        let promises = [];
         let i = 0;
         for (const value of values) {
+            if (t > 0 && promises.length % t == 0) {
+                results = [
+                    ...results,
+                    ...((0, is_async_function_1.default)(cb) ? yield Promise.all(promises) : promises),
+                ];
+                promises = [];
+            }
             promises.push(cb(value, i));
             i++;
         }
-        if ((0, is_async_function_1.default)(cb)) {
-            return yield Promise.all(promises);
+        if (promises.length) {
+            results = [
+                ...results,
+                ...((0, is_async_function_1.default)(cb) ? yield Promise.all(promises) : promises),
+            ];
+            promises = [];
         }
-        return promises;
+        return results;
     }
     else {
-        const obj = {};
+        let result = {};
+        let obj = {};
         for (const [key, value] of Object.entries(values)) {
+            if (t > 0 && Object.keys(obj).length % t == 0) {
+                for (const [key, value] of Object.entries(obj)) {
+                    result[key] = (0, is_async_function_1.default)(cb) ? yield value : value;
+                }
+                obj = {};
+            }
             obj[key] = cb(value, key);
         }
-        if ((0, is_async_function_1.default)(cb)) {
+        if (Object.keys(obj).length) {
             for (const [key, value] of Object.entries(obj)) {
-                obj[key] = yield value;
+                result[key] = (0, is_async_function_1.default)(cb) ? yield value : value;
             }
+            obj = {};
         }
-        return obj;
+        return result;
     }
 });
 exports.asyncEach = asyncEach;

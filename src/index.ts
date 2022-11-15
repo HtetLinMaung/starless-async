@@ -9,29 +9,52 @@ export const timeout = async (duration: number) =>
 
 export const asyncEach = async (
   values: any[] | DynamicObject,
-  cb: (value: any, key: number | string) => any
+  cb: (value: any, key: number | string) => any,
+  t = 0
 ) => {
   if (Array.isArray(values)) {
-    const promises: any[] = [];
+    let results: any[] = [];
+    let promises: any[] = [];
     let i = 0;
     for (const value of values) {
+      if (t > 0 && promises.length % t == 0) {
+        results = [
+          ...results,
+          ...(isAsyncFunction(cb) ? await Promise.all(promises) : promises),
+        ];
+        promises = [];
+      }
       promises.push(cb(value, i));
       i++;
     }
-    if (isAsyncFunction(cb)) {
-      return await Promise.all(promises);
+    if (promises.length) {
+      results = [
+        ...results,
+        ...(isAsyncFunction(cb) ? await Promise.all(promises) : promises),
+      ];
+      promises = [];
     }
-    return promises;
+
+    return results;
   } else {
-    const obj: any = {};
+    let result: any = {};
+    let obj: any = {};
     for (const [key, value] of Object.entries(values)) {
+      if (t > 0 && Object.keys(obj).length % t == 0) {
+        for (const [key, value] of Object.entries(obj)) {
+          result[key] = isAsyncFunction(cb) ? await value : value;
+        }
+        obj = {};
+      }
       obj[key] = cb(value, key);
     }
-    if (isAsyncFunction(cb)) {
+    if (Object.keys(obj).length) {
       for (const [key, value] of Object.entries(obj)) {
-        obj[key] = await value;
+        result[key] = isAsyncFunction(cb) ? await value : value;
       }
+      obj = {};
     }
-    return obj;
+
+    return result;
   }
 };

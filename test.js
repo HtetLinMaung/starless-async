@@ -22,14 +22,24 @@ const main = async () => {
   // });
   // console.log(`final result: ${JSON.stringify(obj, null, 2)}`);
 
-  runParallel(
-    [
-      1000000, 100000, 100000, 100000, 100000, 100000, 100000, 100000,
-      100000, 100000,
-    ],
-    "./worker.js"
+  // runParallel(
+  //   [
+  //     1000000, 100000, 100000, 100000, 100000, 100000, 100000, 100000,
+  //     100000, 100000,
+  //   ],
+  //   "./worker.js"
+  // );
+  // console.log("not blocking");
+  const doubleNums = await asyncEach(
+    { a: 1, b: 2, c: 3, d: 4 },
+    async (v, k) => {
+      await timeout(1);
+      console.log(`key: ${k}`);
+      return v * 2;
+    },
+    3
   );
-  console.log("not blocking");
+  console.log(doubleNums);
 };
 
 main();
